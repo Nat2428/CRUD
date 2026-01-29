@@ -7,7 +7,6 @@ import {
   Surface,
   IconButton,
   Checkbox,
-  SegmentedButtons,
   Portal,
   Dialog,
 } from 'react-native-paper';
@@ -20,12 +19,9 @@ type Todo = {
   completed: boolean;
 };
 
-type Filter = 'all' | 'active' | 'completed';
-
 export default function TodoScreen() {
   const [input, setInput] = useState('');
   const [todos, setTodos] = useState<Todo[]>([]);
-  const [filter, setFilter] = useState<Filter>('all');
   const [isLoading, setIsLoading] = useState(true);
   const [editId, setEditId] = useState<string | null>(null);
   const [editText, setEditText] = useState('');
@@ -90,29 +86,22 @@ export default function TodoScreen() {
     setVisible(true);
   };
 
-  const saveEdit = () => {
+  async function saveEdit() {
     if (editId && editText.trim()) {
       const newTodos = todos.map(item =>
         item.id === editId ? { ...item, title: editText } : item
       );
       setTodos(newTodos);
-      saveTodos(newTodos);
+      await saveTodos(newTodos);
     }
     closeEdit();
-  };
+  }
 
   const closeEdit = () => {
     setVisible(false);
     setEditId(null);
     setEditText('');
   };
-
-  // 🔥 FILTER LOGIC
-  const filteredTodos = todos.filter(item => {
-    if (filter === 'active') return !item.completed;
-    if (filter === 'completed') return item.completed;
-    return true;
-  });
 
   if (isLoading) {
     return <Loading message="Memuat tugas kamu..." />;
@@ -139,21 +128,9 @@ export default function TodoScreen() {
             Tambah
           </Button>
 
-          {/* 🔽 3 STATE FILTER */}
-          <SegmentedButtons
-            value={filter}
-            onValueChange={(value) => setFilter(value as Filter)}
-            buttons={[
-              { value: 'all', label: 'All' },
-              { value: 'active', label: 'Active' },
-              { value: 'completed', label: 'Completed' },
-            ]}
-            style={{ marginVertical: 16 }}
-          />
-
           {/* LIST */}
-          <View>
-            {filteredTodos.map(item => (
+          <View style={{ marginTop: 16 }}>
+            {todos.map(item => (
               <Surface
                 key={item.id}
                 style={{
